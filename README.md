@@ -1,6 +1,7 @@
 # MLOps_group35
 
 Project synopsis - Group - 35
+
 Title: Identifying neurodiversity 
 
 Motivation and Goal
@@ -14,6 +15,7 @@ The project uses the ADHD200 Preprocessed Anatomical Dataset (anonymized and pub
 - Preprocessed 3D structural MRI scans (sMRI) in NIfTI format.
 - Associated phenotypic information such as age, sex, and diagnostic label.
 - Data collected from multiple imaging sites, reflecting real-world heterogeneity.
+
 Due to the large size of the dataset (exceeding 20 GB) and the presence of inter-site variability arising from differences in MRI scanners, acquisition protocols, and image quality, the initial analysis will focus on data from a subset of acquisition sites (specifically NYU, OHSU and Peking_1). This choice helps reduce computational complexity and limit differences between data coming from different acquisition sites, while still allowing us to extend the analysis to additional sites later in the project.
 
 References: 

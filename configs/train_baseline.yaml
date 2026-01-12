@@ -11,3 +11,7 @@ out_dir: "models"
 metrics_path: "reports/metrics.json"
 model_path: "models/model.pt"
 # data_path: "" 
+
+hydra:
+  run:
+    dir: .

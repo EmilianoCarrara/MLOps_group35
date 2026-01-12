@@ -6,15 +6,16 @@ This module handles:
 - saving trained model and metrics
 """
 
-import argparse
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import torch
-import yaml
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
+
+import hydra
+from omegaconf import DictConfig, OmegaConf
 
 from mlops_group35.model import Model
 
@@ -166,22 +167,19 @@ def train(cfg: TrainConfig) -> dict:
 
     return metrics
 
-def load_config(path: str) -> dict:
-    with open(path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default=None, help="Path to a YAML config file.")
-    args = parser.parse_args()
+@hydra.main(version_base="1.3", config_path="../../configs", config_name="train_baseline")
+def main(cfg: DictConfig) -> None:
+    """Train entrypoint using Hydra config."""
+    print(OmegaConf.to_yaml(cfg))
 
-    cfg_dict = {}
-    if args.config is not None:
-        cfg_dict = load_config(args.config)
-
-    cfg = TrainConfig(**cfg_dict)
-    train(cfg)
-
+    Path("reports").mkdir(parents=True, exist_ok=True)
+    OmegaConf.save(cfg, "reports/config.yaml")
+    
+    # Hydra -> dict -> dataclass
+    cfg_dict = OmegaConf.to_container(cfg, resolve=True)
+    train_cfg = TrainConfig(**cfg_dict)  # type: ignore[arg-type]
+    train(train_cfg)
 
 if __name__ == "__main__":
     main()

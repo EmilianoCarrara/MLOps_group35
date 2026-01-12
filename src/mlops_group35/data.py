@@ -31,3 +31,4 @@ def preprocess(data_path: Path, output_folder: Path) -> None:
 if __name__ == "__main__":
     print("Preprocessing data main...")
     typer.run(preprocess)
+    #preprocess(Path("data/raw"), Path("data/preprocessed"))

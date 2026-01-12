@@ -1,4 +1,4 @@
-from __future__ import annotations
+import argparse
 
 import json
 import os
@@ -21,6 +21,23 @@ This module handles:
 
 @dataclass(frozen=True)
 class TrainConfig:
+
+    """Configuration object for the training pipeline.
+
+    Attributes:
+        seed: Random seed for reproducibility.
+        n_samples: Number of training samples (synthetic data).
+        batch_size: Batch size for training.
+        lr: Learning rate.
+        epochs: Number of training epochs.
+        hidden_dim: Hidden layer size.
+        val_split: Fraction of data used for validation.
+        noise_std: Noise level for synthetic data.
+        out_dir: Directory where models are saved.
+        metrics_path: Path to metrics JSON file.
+        model_path: Path to trained model file.
+    """
+
     seed: int = 42
     n_samples: int = 5_000
     batch_size: int = 64
@@ -69,6 +86,16 @@ def evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> floa
 
 
 def train(cfg: TrainConfig) -> dict:
+
+    """Train the model using the provided configuration.
+
+    Args:
+        cfg: Training configuration.
+
+    Returns:
+        Dictionary containing final training and validation metrics.
+    """
+
     set_seed(cfg.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -139,14 +166,15 @@ def train(cfg: TrainConfig) -> dict:
 
     return metrics
 
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--epochs", type=int, default=20)
+    args = parser.parse_args()
+
+    cfg = TrainConfig(epochs=args.epochs)
+    train(cfg)
+
 
 if __name__ == "__main__":
-    # You can override with env vars if you want (simple + docker friendly)
-    cfg = TrainConfig(
-        epochs=int(os.getenv("EPOCHS", "20")),
-        lr=float(os.getenv("LR", "0.001")),
-        batch_size=int(os.getenv("BATCH_SIZE", "64")),
-    )
-    metrics = train(cfg)
-    print(f"Done. Metrics saved to {cfg.metrics_path} | Model saved to {cfg.model_path}")
-    print(metrics)
+    main()
+

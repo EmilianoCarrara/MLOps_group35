@@ -1,19 +1,28 @@
-from torch import nn
 import torch
+from torch import nn
 
 
 class Model(nn.Module):
-    """Just a dummy model to show how to structure your code"""
 
-    def __init__(self):
+    def __init__(self, hidden_dim: int = 32):
         super().__init__()
-        self.layer = nn.Linear(1, 1)
+        self.net = nn.Sequential(
+            nn.Linear(1, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, 1),
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.layer(x)
+        # Ensure shape [batch, 1]
+        if x.ndim == 1:
+            x = x.unsqueeze(1)
+        return self.net(x)
 
 
 if __name__ == "__main__":
     model = Model()
-    x = torch.rand(1)
-    print(f"Output shape of model: {model(x).shape}")
+    x = torch.rand(4, 1)
+    y = model(x)
+    print(f"Input shape: {x.shape} -> Output shape: {y.shape}")

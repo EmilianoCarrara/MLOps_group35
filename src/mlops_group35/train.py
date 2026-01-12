@@ -166,14 +166,17 @@ def train(cfg: TrainConfig) -> dict:
 
     return metrics
 
+import argparse
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=20)
+    parser.add_argument("--lr", type=float, default=1e-3)
     args = parser.parse_args()
 
-    cfg = TrainConfig(epochs=args.epochs)
+    cfg = TrainConfig(epochs=args.epochs, lr=args.lr)
     train(cfg)
-
 
 if __name__ == "__main__":
     main()

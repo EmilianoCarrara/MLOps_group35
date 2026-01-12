@@ -1,3 +1,4 @@
+"""
 from mlops_group35.model import Model
 from mlops_group35.data import MyDataset
 
@@ -8,3 +9,4 @@ def train():
 
 if __name__ == "__main__":
     train()
+"""

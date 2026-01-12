@@ -39,6 +39,7 @@ class MyDataset(Dataset):
         output_file = output_folder / "combined.csv"
         self.data.to_csv(output_file, index=False)
 
+
 def preprocess(data_path: Path, output_folder: Path) -> None:
     print("Preprocessing data...")
     dataset = MyDataset(data_path)

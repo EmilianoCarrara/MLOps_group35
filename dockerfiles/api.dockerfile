@@ -1,12 +1,14 @@
 FROM ghcr.io/astral-sh/uv:python3.11-alpine AS base
 
-COPY uv.lock uv.lock
-COPY pyproject.toml pyproject.toml
+WORKDIR /app
+
+COPY pyproject.toml uv.lock README.md LICENSE ./
 
 RUN uv sync --frozen --no-install-project
 
-COPY src src/
+COPY src ./src
 
-RUN uv sync --frozen
+RUN uv sync
 
+EXPOSE 8000
 ENTRYPOINT ["uv", "run", "uvicorn", "src.mlops_group35.api:app", "--host", "0.0.0.0", "--port", "8000"]

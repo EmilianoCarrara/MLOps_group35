@@ -139,3 +139,11 @@ manual_test/
 models/*.pkl
 models/*.pt
 models/*.ckpt
+models/
+reports/
+
+# Training artifacts
+models/*.pt
+reports/*.json
+reports/figures/*
+.dvc/cache/

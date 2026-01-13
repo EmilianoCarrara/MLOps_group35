@@ -2,12 +2,12 @@ seed: 42
 n_samples: 5000
 batch_size: 64
 lr: 0.001
-epochs: 2
+epochs: 20
 hidden_dim: 32
 val_split: 0.2
 noise_std: 0.1
 out_dir: models
 metrics_path: reports/metrics.json
 model_path: models/model.pt
-profile: true
+profile: false
 profile_path: reports/profile.pstats

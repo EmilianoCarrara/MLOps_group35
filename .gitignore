@@ -147,3 +147,4 @@ models/*.pt
 reports/*.json
 reports/figures/*
 .dvc/cache/
+wandb/

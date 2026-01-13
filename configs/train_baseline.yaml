@@ -10,7 +10,7 @@ noise_std: 0.1
 out_dir: "models"
 metrics_path: "reports/metrics.json"
 model_path: "models/model.pt"
-# data_path: "" 
+# data_path: ""
 
 hydra:
   run:
@@ -18,3 +18,8 @@ hydra:
 
 profile: false
 profile_path: "reports/profile.pstats"
+
+use_wandb: true
+wandb_project: mlops_group35
+wandb_mode: online
+wandb_run_name: null

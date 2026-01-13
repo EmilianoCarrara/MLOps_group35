@@ -113,11 +113,10 @@ hydra:
     - hydra.mode=RUN
     task:
     - epochs=2
-    - profile=true
   job:
     name: train
     chdir: null
-    override_dirname: epochs=2,profile=true
+    override_dirname: epochs=2
     id: ???
     num: ???
     config_name: train_baseline

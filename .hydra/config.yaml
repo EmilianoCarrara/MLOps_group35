@@ -9,5 +9,5 @@ noise_std: 0.1
 out_dir: models
 metrics_path: reports/metrics.json
 model_path: models/model.pt
-profile: true
+profile: false
 profile_path: reports/profile.pstats

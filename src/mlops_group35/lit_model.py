@@ -32,7 +32,6 @@ class LitModel(L.LightningModule):
         return Adam(self.parameters(), lr=self.lr)
 
 
-
 def train():
     # Fake data
     x = torch.rand(1000, 1)

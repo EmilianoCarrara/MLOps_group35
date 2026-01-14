@@ -1,10 +1,8 @@
 import logging
-
 import torch
 from torch import nn
 
 """Neural network model definitions"""
-
 
 logger = logging.getLogger(__name__)
 

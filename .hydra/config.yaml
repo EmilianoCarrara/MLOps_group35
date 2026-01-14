@@ -9,6 +9,20 @@ noise_std: 0.1
 out_dir: models
 metrics_path: reports/metrics.json
 model_path: models/model.pt
+use_csv: true
+csv_path: data/processed/combined.csv
+id_col: ScanDir ID
+feature_cols:
+- Age
+- Gender
+- Handedness
+- Verbal IQ
+- Performance IQ
+- Full4 IQ
+- ADHD Index
+- Inattentive
+- Hyper/Impulsive
+n_clusters: 5
 profile: false
 profile_path: reports/profile.pstats
 use_wandb: true

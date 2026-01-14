@@ -10,15 +10,18 @@ import cProfile
 import json
 import logging
 import pstats
-import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
 import hydra
+import pandas as pd
 import torch
 import wandb
 from omegaconf import DictConfig, OmegaConf
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+from sklearn.preprocessing import StandardScaler
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -29,23 +32,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class TrainConfig:
-    """Configuration object for the training pipeline.
-
-    Attributes:
-        seed: Random seed for reproducibility.
-        n_samples: Number of training samples (synthetic data).
-        batch_size: Batch size for training.
-        lr: Learning rate.
-        epochs: Number of training epochs.
-        hidden_dim: Hidden layer size.
-        val_split: Fraction of data used for validation.
-        noise_std: Noise level for synthetic data.
-        out_dir: Directory where models are saved.
-        metrics_path: Path to metrics JSON file.
-        model_path: Path to trained model file.
-        profile: Enable cProfile profiling.
-        profile_path: Output path for profiling stats (.pstats).
-    """
+    """Configuration object for the training pipeline."""
 
     seed: int = 42
     n_samples: int = 5_000
@@ -61,6 +48,25 @@ class TrainConfig:
     profile: bool = False
     profile_path: str = "reports/profile.pstats"
 
+    # CSV data (optional)
+    use_csv: bool = False
+    csv_path: str = "data/processed/combined.csv"
+
+    # Clustering config (used when use_csv=True)
+    id_col: str = "ScanDir ID"
+    feature_cols: tuple[str, ...] = (
+        "Age",
+        "Gender",
+        "Handedness",
+        "Verbal IQ",
+        "Performance IQ",
+        "Full4 IQ",
+        "ADHD Index",
+        "Inattentive",
+        "Hyper/Impulsive",
+    )
+    n_clusters: int = 5
+
 
 def set_seed(seed: int) -> None:
     logger.info("Setting seed=%d", seed)
@@ -71,16 +77,28 @@ def set_seed(seed: int) -> None:
 
 
 def make_synthetic_regression(n: int, noise_std: float) -> tuple[torch.Tensor, torch.Tensor]:
-    """
-    Create a simple regression dataset: y = 3x - 0.5 + noise
-    x in [-1, 1].
-    """
     logger.info("Generating synthetic regression data: n=%d, noise_std=%.6f", n, noise_std)
     x = 2 * torch.rand(n, 1) - 1
     noise = noise_std * torch.randn(n, 1)
     y = 3.0 * x - 0.5 + noise
     logger.debug("Generated tensors: x_shape=%s y_shape=%s", tuple(x.shape), tuple(y.shape))
     return x, y
+
+
+def load_csv_for_clustering(
+    csv_path: str,
+    id_col: str,
+    feature_cols: tuple[str, ...],
+) -> tuple[pd.Series, pd.DataFrame]:
+    df = pd.read_csv(csv_path)
+
+    needed = [id_col, *feature_cols]
+    missing = [c for c in needed if c not in df.columns]
+    if missing:
+        raise ValueError(f"Missing columns in CSV: {missing}")
+
+    df = df[needed].replace(-999, pd.NA).dropna()
+    return df[id_col], df[list(feature_cols)]
 
 
 @torch.no_grad()
@@ -102,16 +120,6 @@ def evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> floa
 
 
 def train(cfg: TrainConfig, run: wandb.sdk.wandb_run.Run | None = None) -> dict[str, Any]:
-    """Train the model using the provided configuration.
-
-    Args:
-        cfg: Training configuration.
-        run: Optional W&B run to log metrics/artifacts.
-
-    Returns:
-        Dictionary containing final training and validation metrics.
-    """
-    start_time = time.time()
     logger.info("Starting train()")
     logger.info(
         "Config: epochs=%d lr=%s batch_size=%d hidden_dim=%d val_split=%s n_samples=%d",
@@ -127,14 +135,49 @@ def train(cfg: TrainConfig, run: wandb.sdk.wandb_run.Run | None = None) -> dict[
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logger.info("Using device=%s | torch=%s", device, torch.__version__)
 
-    # Ensure output dirs exist
     Path(cfg.out_dir).mkdir(parents=True, exist_ok=True)
     Path(Path(cfg.metrics_path).parent).mkdir(parents=True, exist_ok=True)
-    logger.debug(
-        "Ensured output directories exist: out_dir=%s metrics_dir=%s", cfg.out_dir, Path(cfg.metrics_path).parent
-    )
 
-    # Data
+    # ---- Clustering mode (unsupervised) ----
+    if cfg.use_csv:
+        logger.info("Clustering from CSV: %s", cfg.csv_path)
+        ids, feats = load_csv_for_clustering(cfg.csv_path, cfg.id_col, cfg.feature_cols)
+        logger.info("Clustering data shape: n_samples=%d n_features=%d", len(feats), feats.shape[1])
+
+        x_scaled = StandardScaler().fit_transform(feats.to_numpy(dtype=float))
+        kmeans = KMeans(n_clusters=cfg.n_clusters, random_state=cfg.seed, n_init="auto")
+        clusters = kmeans.fit_predict(x_scaled)
+
+        sil = float("nan")
+        if cfg.n_clusters >= 2 and len(feats) > cfg.n_clusters:
+            sil = float(silhouette_score(x_scaled, clusters))
+        inertia = float(kmeans.inertia_)
+
+        assignments_path = "reports/cluster_assignments.csv"
+        pd.DataFrame({cfg.id_col: ids.to_numpy(), "cluster": clusters}).to_csv(assignments_path, index=False)
+        logger.info("Saved cluster assignments to %s", assignments_path)
+
+        metrics: dict[str, Any] = {
+            "silhouette": sil,
+            "inertia": inertia,
+            "n_clusters": cfg.n_clusters,
+            "n_samples": int(len(feats)),
+            "n_features": int(feats.shape[1]),
+            "csv_path": cfg.csv_path,
+        }
+        with open(cfg.metrics_path, "w", encoding="utf-8") as f:
+            json.dump(metrics, f, indent=2)
+        logger.info("Saved metrics to %s", cfg.metrics_path)
+
+        if run is not None:
+            run.log({"silhouette": sil, "inertia": inertia, "n_clusters": cfg.n_clusters})
+            run.summary["silhouette"] = sil
+            run.summary["inertia"] = inertia
+            run.summary["n_clusters"] = cfg.n_clusters
+
+        return metrics
+
+    # ---- Original regression mode (unchanged) ----
     x, y = make_synthetic_regression(cfg.n_samples, cfg.noise_std)
     n_val = int(cfg.n_samples * cfg.val_split)
     n_train = cfg.n_samples - n_val
@@ -147,14 +190,12 @@ def train(cfg: TrainConfig, run: wandb.sdk.wandb_run.Run | None = None) -> dict[
     train_loader = DataLoader(TensorDataset(x_train, y_train), batch_size=cfg.batch_size, shuffle=True)
     val_loader = DataLoader(TensorDataset(x_val, y_val), batch_size=cfg.batch_size, shuffle=False)
 
-    # Model
     model = Model(hidden_dim=cfg.hidden_dim).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
     loss_fn = nn.MSELoss()
 
     logger.info("Initialized model and optimizer")
 
-    # Train loop
     train_mse = 0.0
     val_mse = 0.0
     for epoch in range(1, cfg.epochs + 1):
@@ -178,24 +219,12 @@ def train(cfg: TrainConfig, run: wandb.sdk.wandb_run.Run | None = None) -> dict[
         train_mse = epoch_loss / max(n_batches, 1)
         val_mse = evaluate(model, val_loader, device)
 
-        # Keep original behavior (print) + add logging
         print(f"Epoch {epoch:02d}/{cfg.epochs} | train_mse={train_mse:.6f} | val_mse={val_mse:.6f}")
-        logger.info(
-            "Epoch %02d/%d | train_mse=%.6f | val_mse=%.6f",
-            epoch,
-            cfg.epochs,
-            train_mse,
-            val_mse,
-        )
+        logger.info("Epoch %02d/%d | train_mse=%.6f | val_mse=%.6f", epoch, cfg.epochs, train_mse, val_mse)
 
-        # W&B metrics
         if run is not None:
-            run.log(
-                {"epoch": epoch, "train_mse": float(train_mse), "val_mse": float(val_mse)},
-                step=epoch,
-            )
+            run.log({"epoch": epoch, "train_mse": float(train_mse), "val_mse": float(val_mse)}, step=epoch)
 
-    # Save model
     payload = {
         "state_dict": model.state_dict(),
         "config": asdict(cfg),
@@ -205,8 +234,7 @@ def train(cfg: TrainConfig, run: wandb.sdk.wandb_run.Run | None = None) -> dict[
     torch.save(payload, cfg.model_path)
     logger.info("Saved model to %s", cfg.model_path)
 
-    # Save metrics
-    metrics: dict[str, Any] = {
+    metrics = {
         "train_mse": float(train_mse),
         "val_mse": float(val_mse),
         "epochs": cfg.epochs,
@@ -218,26 +246,21 @@ def train(cfg: TrainConfig, run: wandb.sdk.wandb_run.Run | None = None) -> dict[
         json.dump(metrics, f, indent=2)
     logger.info("Saved metrics to %s", cfg.metrics_path)
 
-    # W&B summary (final numbers)
     if run is not None:
         run.summary["final_train_mse"] = float(train_mse)
         run.summary["final_val_mse"] = float(val_mse)
-
-    elapsed = time.time() - start_time
-    logger.info("train() completed in %.2fs", elapsed)
+        run.log({"final_val_mse": float(val_mse)}, step=cfg.epochs)
 
     return metrics
 
 
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="train_baseline")
 def main(cfg: DictConfig) -> None:
-    """Train entrypoint using Hydra config."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
     )
 
-    # Keep original behavior (print config) + add logging
     print(OmegaConf.to_yaml(cfg))
     logger.info("Hydra config resolved:\n%s", OmegaConf.to_yaml(cfg))
 
@@ -245,13 +268,6 @@ def main(cfg: DictConfig) -> None:
     OmegaConf.save(cfg, "reports/config.yaml")
     logger.info("Saved Hydra config to reports/config.yaml")
 
-    cfg_dict = OmegaConf.to_container(cfg, resolve=True)
-    wandb_keys = {"use_wandb", "wandb_project", "wandb_mode", "wandb_run_name"}
-    cfg_dict = {k: v for k, v in cfg_dict.items() if k not in wandb_keys}
-
-    train_cfg = TrainConfig(**cfg_dict)
-
-    # ----- W&B init (minimal, controlled via config) -----
     use_wandb = bool(cfg.get("use_wandb", False))
     wandb_project = str(cfg.get("wandb_project", "mlops_group35"))
     wandb_mode = str(cfg.get("wandb_mode", "offline"))
@@ -262,10 +278,21 @@ def main(cfg: DictConfig) -> None:
         run = wandb.init(
             project=wandb_project,
             name=str(wandb_run_name) if wandb_run_name is not None else None,
-            config=OmegaConf.to_container(cfg, resolve=True),
             mode=wandb_mode,
         )
         logger.info("W&B initialized: project=%s mode=%s", wandb_project, wandb_mode)
+
+        sweep_overrides = dict(run.config)
+        allowed = set(TrainConfig.__dataclass_fields__.keys())
+        sweep_overrides = {k: v for k, v in sweep_overrides.items() if k in allowed}
+        if sweep_overrides:
+            logger.info("Applying sweep overrides to Hydra cfg: %s", sweep_overrides)
+            cfg = OmegaConf.merge(cfg, OmegaConf.create(sweep_overrides))
+
+    cfg_dict = OmegaConf.to_container(cfg, resolve=True)
+    wandb_keys = {"use_wandb", "wandb_project", "wandb_mode", "wandb_run_name"}
+    cfg_dict = {k: v for k, v in cfg_dict.items() if k not in wandb_keys}
+    train_cfg = TrainConfig(**cfg_dict)
 
     try:
         if train_cfg.profile:
@@ -282,8 +309,7 @@ def main(cfg: DictConfig) -> None:
 
             stats = pstats.Stats(train_cfg.profile_path)
             stats.strip_dirs().sort_stats("cumtime")
-
-            stats.print_stats(25)  # console
+            stats.print_stats(25)
 
             txt_path = Path(train_cfg.profile_path).with_suffix(".txt")
             with txt_path.open("w", encoding="utf-8") as f:
@@ -295,7 +321,6 @@ def main(cfg: DictConfig) -> None:
             logger.info("Profiling disabled")
             train(train_cfg, run=run)
 
-        # ----- W&B artifacts (model + metrics + config + optional profile) -----
         if run is not None:
             artifact = wandb.Artifact(name="training-artifacts", type="model")
             if Path("reports/config.yaml").exists():
@@ -304,6 +329,8 @@ def main(cfg: DictConfig) -> None:
                 artifact.add_file(train_cfg.metrics_path)
             if Path(train_cfg.model_path).exists():
                 artifact.add_file(train_cfg.model_path)
+            if Path("reports/cluster_assignments.csv").exists():
+                artifact.add_file("reports/cluster_assignments.csv")
 
             if train_cfg.profile and Path(train_cfg.profile_path).exists():
                 artifact.add_file(train_cfg.profile_path)

@@ -2,32 +2,22 @@ program: src/mlops_group35/train.py
 method: random
 
 metric:
-  name: final_val_mse
-  goal: minimize
+  name: silhouette
+  goal: maximize
 
 parameters:
-  lr:
-    distribution: log_uniform_values
-    min: 0.0001
-    max: 0.05
-
-  batch_size:
-    values: [32, 64, 128]
-
-  hidden_dim:
-    values: [16, 32, 64]
-
-  epochs:
-    value: 10
+  n_clusters:
+    values: [2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 command:
   - ${env}
-  - ${interpreter}
+  - uv
+  - run
+  - python
   - ${program}
-  - ${args}
   - use_wandb=true
   - wandb_mode=online
-  - lr=${lr}
-  - batch_size=${batch_size}
-  - hidden_dim=${hidden_dim}
-  - epochs=${epochs}
+  - wandb_project=MLOps_group35-src_mlops_group35
+  - use_csv=true
+  - csv_path=data/processed/combined.csv
+  - n_clusters=${n_clusters}

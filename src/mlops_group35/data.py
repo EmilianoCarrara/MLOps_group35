@@ -30,8 +30,7 @@ class MyDataset(Dataset):
 
     def __getitem__(self, index: int):
         """Return a given sample from the dataset."""
-        return self.data[index]
-        # return self.data.iloc[index]
+        return self.data.iloc[index]
 
     def preprocess(self, output_folder: Path) -> None:
         """Preprocess the raw data and save it to the output folder."""

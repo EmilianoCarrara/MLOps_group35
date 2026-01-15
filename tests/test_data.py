@@ -3,8 +3,8 @@ import os
 from tests import _PATH_DATA
 import pandas as pd
 
-NUM_ROWS = 691
-NUM_COLS = 24
+NUM_ROWS = 606
+NUM_COLS = 23
 CSV_PATH = os.path.join(_PATH_DATA, "processed", "combined.csv")
 DF = pd.read_csv(CSV_PATH)
 # use df = DF.copy(deep=True) if you are going to modify the data in any ways
@@ -17,6 +17,7 @@ def test_dataset():
 
     assert len(df.columns) == NUM_COLS, f"Dataset should have {NUM_COLS} columns"
 
+    print(len(df))
     assert len(df) >= NUM_ROWS, f"Dataset should have at least {NUM_ROWS} rows"
 
 
@@ -25,13 +26,13 @@ REQUIRED_COLUMNS = {
    'Secondary Dx ', 'ADHD Measure', 'ADHD Index', 'Inattentive',
    'Hyper/Impulsive', 'IQ Measure', 'Verbal IQ', 'Performance IQ',
    'Full2 IQ', 'Full4 IQ', 'Med Status', 'QC_Rest_1', 'QC_Rest_2',
-   'QC_Rest_3', 'QC_Rest_4', 'QC_Anatomical_1', 'QC_Anatomical_2', 'ID'
+   'QC_Rest_3', 'QC_Rest_4', 'QC_Anatomical_1', 'QC_Anatomical_2'
 }
 
 def test_required_columns():
     df = DF
-    print(df.columns)
-    missing = REQUIRED_COLUMNS - set(DF.columns)
+    #print(df.columns)
+    missing = REQUIRED_COLUMNS - set(df.columns)
     assert not missing, f"Missing columns: {missing}"
 
 

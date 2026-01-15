@@ -58,7 +58,7 @@ def load_csv_for_clustering(
     if missing:
         raise ValueError(f"Missing columns in CSV: {missing}")
 
-    #TODO
+    #TODO Maybe we should not remove the entire row if any cell in that row is missing
     df = df[needed].replace(-999, pd.NA).dropna()
     return df[id_col], df[list(feature_cols)]
 

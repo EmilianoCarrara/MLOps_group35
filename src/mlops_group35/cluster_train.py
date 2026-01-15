@@ -63,7 +63,7 @@ def build_train_config(cfg: DictConfig) -> TrainConfig:
     return TrainConfig(**cfg_dict)
 
 
-def generate_metrics(cfg, feats, kmeans, x_scaled, clusters, ids, run):
+def generate_and_save_metrics(cfg, feats, kmeans, x_scaled, clusters, ids, run):
     sil = float("nan")
     if cfg.n_clusters >= 2 and len(feats) > cfg.n_clusters:
         sil = float(silhouette_score(x_scaled, clusters))
@@ -127,7 +127,8 @@ def train(cfg: TrainConfig, run: wandb.sdk.wandb_run.Run | None = None) -> dict[
     )
     clusters = kmeans.fit_predict(x_scaled)
 
-    return generate_metrics(cfg, feats, kmeans, x_scaled, clusters, ids, run)
+    generate_and_save_metrics(cfg, feats, kmeans, x_scaled, clusters, ids, run)
+    return clusters
 
 
 
@@ -135,7 +136,6 @@ def run_training_with_optional_profiling(
     train_cfg: TrainConfig,
     run: wandb.sdk.wandb_run.Run | None,
 ) -> None:
-
     if not train_cfg.profile:
         train(train_cfg, run=run)
         return
@@ -150,6 +150,7 @@ def run_training_with_optional_profiling(
 
     stats = pstats.Stats(train_cfg.profile_path)
     stats.sort_stats("cumtime").print_stats(25)
+
 
 
 

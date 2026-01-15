@@ -111,13 +111,11 @@ hydra:
   overrides:
     hydra:
     - hydra.mode=RUN
-    task:
-    - use_csv=true
-    - n_clusters=5
+    task: []
   job:
-    name: train
+    name: cluster_train
     chdir: null
-    override_dirname: n_clusters=5,use_csv=true
+    override_dirname: ''
     id: ???
     num: ???
     config_name: train_baseline
@@ -131,18 +129,18 @@ hydra:
   runtime:
     version: 1.3.2
     version_base: '1.3'
-    cwd: /workspaces/MLOps_group35
+    cwd: /Users/zahed/Documents/Msc/3-Semester/MLOPS
     config_sources:
     - path: hydra.conf
       schema: pkg
       provider: hydra
-    - path: /workspaces/MLOps_group35/configs
+    - path: /Users/zahed/Documents/Msc/3-Semester/MLOPS/configs
       schema: file
       provider: main
     - path: ''
       schema: structured
       provider: schema
-    output_dir: /workspaces/MLOps_group35
+    output_dir: /Users/zahed/Documents/Msc/3-Semester/MLOPS
     choices:
       hydra/env: default
       hydra/callbacks: null

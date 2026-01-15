@@ -9,7 +9,7 @@ noise_std: 0.1
 out_dir: models
 metrics_path: reports/metrics.json
 model_path: models/model.pt
-use_csv: true
+use_csv: false
 csv_path: data/processed/combined.csv
 id_col: ScanDir ID
 feature_cols:

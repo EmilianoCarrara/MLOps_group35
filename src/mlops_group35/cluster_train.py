@@ -26,6 +26,8 @@ from sklearn.preprocessing import StandardScaler
 from mlops_group35.config import TrainConfig
 from mlops_group35.data import load_csv_for_clustering
 
+CONFIG_YAML_FILE = "reports/cluster_config.yaml"
+
 logger = logging.getLogger(__name__)
 
 
@@ -78,7 +80,7 @@ def train(cfg: TrainConfig, run: wandb.sdk.wandb_run.Run | None = None) -> dict[
     return metrics
 
 
-@hydra.main(version_base="1.3", config_path="../../configs", config_name="train_baseline")
+@hydra.main(version_base="1.3", config_path="../../configs", config_name="cluster")
 def main(cfg: DictConfig) -> None:
     logging.basicConfig(
         level=logging.INFO,
@@ -88,7 +90,7 @@ def main(cfg: DictConfig) -> None:
     logger.info("Hydra config resolved:\n%s", OmegaConf.to_yaml(cfg))
 
     Path("reports").mkdir(parents=True, exist_ok=True)
-    OmegaConf.save(cfg, "reports/config.yaml")
+    OmegaConf.save(cfg, CONFIG_YAML_FILE)
 
     use_wandb = bool(cfg.get("use_wandb", False))
     wandb_project = str(cfg.get("wandb_project", "mlops_group35"))

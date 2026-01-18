@@ -1,7 +1,13 @@
 from fastapi import FastAPI
 from http import HTTPStatus
+from hydra import initialize, compose
 
 from pydantic import BaseModel
+
+from mlops_group35.cluster_train import build_train_config
+from mlops_group35.data import load_csv_for_clustering
+
+
 class PredictionInput(BaseModel):
     Age: int
     Gender: int
@@ -47,6 +53,16 @@ def predict(data: PredictionInput):
         "Hyper/Impulsive": data.Hyper_Impulsive,
     }
 
+
+
+    with initialize(config_path="../../configs", version_base="1.3"):
+        cfg = compose(config_name="cluster")
+
+    train_cfg = build_train_config(cfg)
+
+    csv_path = "data/processed/combined.csv"
+    id_col = "ScanDir ID"
+    ids, feats = load_csv_for_clustering(csv_path, id_col, )
 
 
     return {"features_used"}

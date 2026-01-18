@@ -51,7 +51,7 @@ def test_train_calls_metrics_function(mock_loader, mock_metrics, tmp_path, monke
         profile_path="reports/profile.prof",
     )
 
-    c_train.train(cfg, run=None)
+    c_train.train(cfg, ids, feats, run=None)
     mock_metrics.assert_called_once()
 
 
@@ -77,7 +77,7 @@ def test_train_returns_clusters(mock_loader, mock_metrics, tmp_path, monkeypatch
         profile_path="reports/profile.prof",
     )
 
-    clusters = c_train.train(cfg, run=None)
+    clusters = c_train.train(cfg, ids, feats, run=None)
 
     # Assertions
     assert len(clusters) == 4

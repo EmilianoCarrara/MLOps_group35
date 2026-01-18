@@ -22,16 +22,16 @@ def test_dataset():
 
 
 REQUIRED_COLUMNS = {
-    'ScanDir ID', 'Site', 'Gender', 'Age', 'Handedness', 'DX',
-   'Secondary Dx ', 'ADHD Measure', 'ADHD Index', 'Inattentive',
-   'Hyper/Impulsive', 'IQ Measure', 'Verbal IQ', 'Performance IQ',
-   'Full2 IQ', 'Full4 IQ', 'Med Status', 'QC_Rest_1', 'QC_Rest_2',
-   'QC_Rest_3', 'QC_Rest_4', 'QC_Anatomical_1', 'QC_Anatomical_2'
+    'scandir_id', 'site', 'gender', 'age', 'handedness', 'dx',
+    'secondary_dx', 'adhd_measure', 'adhd_index', 'inattentive',
+    'hyper_impulsive', 'iq_measure', 'verbal_iq', 'performance_iq',
+    'full2_iq', 'full4_iq', 'med_status', 'qc_rest_1', 'qc_rest_2',
+    'qc_rest_3', 'qc_rest_4', 'qc_anatomical_1', 'qc_anatomical_2'
 }
 
 def test_required_columns():
     df = DF
-    #print(df.columns)
+    print(df.columns)
     missing = REQUIRED_COLUMNS - set(df.columns)
     assert not missing, f"Missing columns: {missing}"
 

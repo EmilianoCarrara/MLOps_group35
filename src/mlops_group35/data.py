@@ -34,9 +34,19 @@ class MyDataset(Dataset):
 
     def preprocess(self, output_folder: Path) -> None:
         """Preprocess the raw data and save it to the output folder."""
+        self.data.columns = self.clean_columns(self.data.columns)
         output_folder.mkdir(parents=True, exist_ok=True)
         output_file = output_folder / "combined.csv"
         self.data.to_csv(output_file, index=False)
+
+    def clean_columns(self, cols):
+        return (
+            cols.str.strip()
+            .str.lower()
+            .str.replace(r"[^\w]+", "_", regex=True)
+            .str.replace(r"^(\d)", r"_\1", regex=True)
+        )
+
 
 
 def preprocess(data_path: Path, output_folder: Path) -> None:
@@ -65,5 +75,5 @@ def load_csv_for_clustering(
 
 if __name__ == "__main__":
     print("Preprocessing data main...")
-    typer.run(preprocess)
-    # preprocess(Path("data/raw"), Path("data/preprocessed"))
+    #typer.run(preprocess)
+    preprocess(Path("data/raw"), Path("data/processed"))

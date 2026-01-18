@@ -1,40 +1,29 @@
-name: Code linting
+name: "Run tests"
 
 on:
   push:
-    branches: [main]
+    branches: [ master, main, M17 ]
   pull_request:
-    branches: [main]
-
-permissions:
-  contents: read
+    branches: [ master, main ]
 
 jobs:
-  lint:
-    name: Ruff lint + format check
+  build:
+
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+    - name: Setup uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        python-version: 3.11
 
-      - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+    - name: Install dependencies
+      run: |
+        uv sync --dev --locked
 
-      - name: Install dependencies
-        run: |
-          uv sync
-
-      - name: Ruff check
-        run: |
-          uv run ruff check .
-
-      - name: Ruff format (check only)
-        run: |
-          uv run ruff format --check .
+    - name: Test with pytest
+      run: |
+        uv run pytest -v

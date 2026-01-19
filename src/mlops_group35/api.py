@@ -4,8 +4,8 @@ from hydra import initialize, compose
 import pandas as pd
 from pydantic import BaseModel
 
-from mlops_group35 import cluster_train
-from mlops_group35.cluster_train import build_train_config
+from mlops_group35 import train
+from mlops_group35.train import build_train_config
 from mlops_group35.data import load_preprocessed_data
 
 
@@ -58,7 +58,7 @@ def predict(data: PredictionInput):
     # Append to dataset
     df_with_new = pd.concat([df, new_row], ignore_index=True)
 
-    df_out, kmeans, X_scaled = cluster_train.train(df_with_new, train_cfg.n_clusters, train_cfg.seed)
+    df_out, kmeans, X_scaled = train.train(df_with_new, train_cfg.n_clusters, train_cfg.seed)
 
     # Get user's cluster
     user_cluster = df_out.iloc[-1]["cluster"]

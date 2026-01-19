@@ -1,11 +1,8 @@
 
 
-import json
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pandas as pd
-import pytest
 from omegaconf import OmegaConf
 
 import mlops_group35.cluster_train as c_train

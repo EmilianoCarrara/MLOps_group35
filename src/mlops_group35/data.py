@@ -1,11 +1,11 @@
 from pathlib import Path
 import pandas as pd
+from torch.utils.data import Dataset
+
 pd.set_option("display.max_columns", None)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.width', 2000)
 
-import typer
-from torch.utils.data import Dataset
 
 
 class MyDataset(Dataset):

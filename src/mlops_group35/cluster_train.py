@@ -14,6 +14,8 @@ import logging
 import pstats
 from pathlib import Path
 from typing import Any
+import numpy as np
+from sklearn.impute import SimpleImputer
 
 import hydra
 import pandas as pd
@@ -101,28 +103,60 @@ def generate_and_save_metrics(cfg, feats, kmeans, x_scaled, clusters, ids, run):
 
 
 
-def train(cfg, df, run: None = None) -> dict[str, Any]:
+def train_config(cfg, df, run: None = None) -> dict[str, Any]:
     logger.info("Starting clustering pipeline")
     logger.info("CSV path: %s | n_clusters=%d", cfg.csv_path, cfg.n_clusters)
 
     Path("reports").mkdir(parents=True, exist_ok=True)
     Path(Path(cfg.metrics_path).parent).mkdir(parents=True, exist_ok=True)
 
+    clusters = train(df, cfg.n_clusters, cfg.seed)
+
+    #generate_and_save_metrics(cfg, df, kmeans, x_scaled, clusters, ids, run)
+    return clusters
 
 
+def train(df, n_clusters, seed):
     # ---- Preprocessing ----
-    x_scaled = StandardScaler().fit_transform(df.to_numpy(dtype=float))
+    X_scaled = _process_data(df)
 
     # ---- Clustering ----
     kmeans = KMeans(
-        n_clusters=cfg.n_clusters,
-        random_state=cfg.seed,
+        n_clusters=n_clusters,
+        random_state=seed,
         n_init="auto",
     )
-    clusters = kmeans.fit_predict(x_scaled)
+    clusters = kmeans.fit_predict(X_scaled)
 
-    generate_and_save_metrics(cfg, df, kmeans, x_scaled, clusters, ids, run)
-    return clusters
+
+def _process_data(df):
+    df2 = df.drop(
+        columns=["scandir_id", "site", "full2_iq", "qc_rest_3", "qc_rest_4",
+                 "qc_anatomical_2", "secondary_dx"],
+        errors="ignore"
+    )
+
+    X = df2.select_dtypes(include="number")
+    if len(X) != len(df):
+        print("Error: Data type is not numeric")
+
+    X = X.replace(-999, np.nan)
+
+    imputer = SimpleImputer(strategy="median")
+    X_imputed = pd.DataFrame(
+        imputer.fit_transform(X),
+        columns=X.columns,
+        index=X.index
+    )
+
+    scaler = StandardScaler()
+    X_scaled = pd.DataFrame(
+        scaler.fit_transform(X_imputed),
+        columns=X.columns,
+        index=X.index
+    )
+
+    return X_scaled
 
 
 
@@ -140,13 +174,13 @@ def run_training_with_optional_profiling(
 
 
     if not cfg.profile:
-        train(cfg, df, run=run)
+        train_config(cfg, df, run=run)
         return
 
     profiler = cProfile.Profile()
     profiler.enable()
 
-    train(cfg, df, run=run)
+    train_config(cfg, df, run=run)
 
     profiler.disable()
     profiler.dump_stats(cfg.profile_path)

@@ -1,0 +1,11 @@
+{
+  "age": 25,
+  "gender": 1,
+  "handedness": 0,
+  "verbal_iq": 110,
+  "performance_iq": 105,
+  "full4_iq": 108,
+  "adhd_index": 60,
+  "inattentive": 55,
+  "hyper_impulsive": 50
+}

@@ -14,16 +14,16 @@ class TrainConfig:
     csv_path: str = "data/processed/combined.csv"
 
     # Clustering config
-    id_col: str = "ScanDir ID"
+    id_col: str = "scandir_id"
     feature_cols: tuple[str, ...] = (
-        "Age",
-        "Gender",
-        "Handedness",
-        "Verbal IQ",
-        "Performance IQ",
-        "Full4 IQ",
-        "ADHD Index",
-        "Inattentive",
-        "Hyper/Impulsive",
+        "age",
+        "gender",
+        "handedness",
+        "verbal_iq",
+        "performance_iq",
+        "full4_iq",
+        "adhd_index",
+        "inattentive",
+        "hyper/impulsive",
     )
     n_clusters: int = 5

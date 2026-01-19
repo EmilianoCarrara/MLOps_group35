@@ -5,7 +5,7 @@ from hydra import initialize, compose
 from pydantic import BaseModel
 
 from mlops_group35.cluster_train import build_train_config
-from mlops_group35.data import load_csv_for_clustering
+from mlops_group35.data import load_preprocessed_data
 
 
 class PredictionInput(BaseModel):
@@ -41,7 +41,7 @@ def read_item(item_id: int):
 
 @app.post("/predict")
 def predict(data: PredictionInput):
-    field_names = data.model_fields.keys()
+    required_feats = data.model_fields.keys()
 
 
     # data_dict = {
@@ -64,8 +64,7 @@ def predict(data: PredictionInput):
     # train_cfg = build_train_config(cfg)
 
     csv_path = "data/processed/combined.csv"
-    id_col = "scandir_id"
-    ids, df = load_csv_for_clustering(csv_path, id_col, field_names)
+    df = load_preprocessed_data(csv_path, required_feats)
 
     print(df.tail(5))
 

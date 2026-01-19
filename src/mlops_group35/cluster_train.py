@@ -24,7 +24,7 @@ from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
 
 from mlops_group35.config import TrainConfig
-from mlops_group35.data import load_csv_for_clustering
+from mlops_group35.data import load_preprocessed_data
 
 CONFIG_YAML_FILE = "reports/cluster_config.yaml"
 
@@ -101,7 +101,7 @@ def generate_and_save_metrics(cfg, feats, kmeans, x_scaled, clusters, ids, run):
 
 
 
-def train(cfg, ids, feats, run: None = None) -> dict[str, Any]:
+def train(cfg, df, run: None = None) -> dict[str, Any]:
     logger.info("Starting clustering pipeline")
     logger.info("CSV path: %s | n_clusters=%d", cfg.csv_path, cfg.n_clusters)
 
@@ -111,7 +111,7 @@ def train(cfg, ids, feats, run: None = None) -> dict[str, Any]:
 
 
     # ---- Preprocessing ----
-    x_scaled = StandardScaler().fit_transform(feats.to_numpy(dtype=float))
+    x_scaled = StandardScaler().fit_transform(df.to_numpy(dtype=float))
 
     # ---- Clustering ----
     kmeans = KMeans(
@@ -121,33 +121,32 @@ def train(cfg, ids, feats, run: None = None) -> dict[str, Any]:
     )
     clusters = kmeans.fit_predict(x_scaled)
 
-    generate_and_save_metrics(cfg, feats, kmeans, x_scaled, clusters, ids, run)
+    generate_and_save_metrics(cfg, df, kmeans, x_scaled, clusters, ids, run)
     return clusters
 
 
 
 def run_training_with_optional_profiling(
     cfg: TrainConfig,
-    run: wandb.sdk.wandb_run.Run | None,
-) -> None:
+    run: wandb.sdk.wandb_run.Run | None) -> None:
 
     # ---- Load data ----
-    ids, feats = load_csv_for_clustering(cfg.csv_path, cfg.id_col, cfg.feature_cols)
+    df = load_preprocessed_data(cfg.csv_path, cfg.feature_cols)
     logger.info(
         "Clustering data shape: n_samples=%d n_features=%d",
-        len(feats),
-        feats.shape[1],
+        len(df),
+        df.shape[1],
     )
 
 
     if not cfg.profile:
-        train(cfg, ids, feats, run=run)
+        train(cfg, df, run=run)
         return
 
     profiler = cProfile.Profile()
     profiler.enable()
 
-    train(cfg, ids, feats, run=run)
+    train(cfg, df, run=run)
 
     profiler.disable()
     profiler.dump_stats(cfg.profile_path)

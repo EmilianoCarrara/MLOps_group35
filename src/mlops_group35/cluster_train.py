@@ -103,16 +103,18 @@ def generate_and_save_metrics(cfg, feats, kmeans, x_scaled, clusters, ids, run):
 
 
 
-def train_config(cfg, df, run: None = None) -> dict[str, Any]:
+def train_with_config(cfg, df, run: None = None) -> dict[str, Any]:
     logger.info("Starting clustering pipeline")
     logger.info("CSV path: %s | n_clusters=%d", cfg.csv_path, cfg.n_clusters)
 
     Path("reports").mkdir(parents=True, exist_ok=True)
     Path(Path(cfg.metrics_path).parent).mkdir(parents=True, exist_ok=True)
 
-    clusters = train(df, cfg.n_clusters, cfg.seed)
+    df_out, kmeans, X_scaled = train(df, cfg.n_clusters, cfg.seed)
+    clusters = df_out["cluster"]
+    ids = df_out["scandir_id"]
 
-    #generate_and_save_metrics(cfg, df, kmeans, x_scaled, clusters, ids, run)
+    generate_and_save_metrics(cfg, df, kmeans, X_scaled, clusters, ids, run)
     return clusters
 
 
@@ -178,13 +180,13 @@ def run_training_with_optional_profiling(
 
 
     if not cfg.profile:
-        train_config(cfg, df, run=run)
+        train_with_config(cfg, df, run=run)
         return
 
     profiler = cProfile.Profile()
     profiler.enable()
 
-    train_config(cfg, df, run=run)
+    train_with_config(cfg, df, run=run)
 
     profiler.disable()
     profiler.dump_stats(cfg.profile_path)

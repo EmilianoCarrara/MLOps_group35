@@ -24,6 +24,6 @@ class TrainConfig:
         "full4_iq",
         "adhd_index",
         "inattentive",
-        "hyper/impulsive",
+        "hyper_impulsive",
     )
     n_clusters: int = 5

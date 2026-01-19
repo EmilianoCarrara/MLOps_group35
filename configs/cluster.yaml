@@ -14,7 +14,7 @@ feature_cols:
   - full4_iq
   - adhd_index
   - inattentive
-  - hyper/impulsive
+  - hyper_impulsive
 
 n_clusters: 5
 

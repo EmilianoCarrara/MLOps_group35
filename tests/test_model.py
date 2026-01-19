@@ -32,17 +32,19 @@ def test_build_train_config_filters_wandb_keys():
 
 
 @patch("mlops_group35.cluster_train.generate_and_save_metrics")
-@patch("mlops_group35.cluster_train.load_csv_for_clustering")
-def test_train_calls_metrics_function(mock_loader, mock_metrics, tmp_path, monkeypatch):
+def test_train_calls_metrics_function(mock_metrics, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
-    ids = pd.Series([1, 2, 3])
-    feats = pd.DataFrame({"a": [1, 2, 3], "b": [2, 3, 4]})
-    mock_loader.return_value = (ids, feats)
+    # Create fake dataset
+    df = pd.DataFrame({
+        "scandir_id": [1, 2, 3],
+        "a": [1, 2, 3],
+        "b": [2, 3, 4],
+    })
 
     cfg = TrainConfig(
         csv_path="data.csv",
-        id_col="id",
+        id_col="scandir_id",
         feature_cols=["a", "b"],
         n_clusters=2,
         seed=42,
@@ -51,24 +53,27 @@ def test_train_calls_metrics_function(mock_loader, mock_metrics, tmp_path, monke
         profile_path="reports/profile.prof",
     )
 
-    c_train.train_config(cfg, ids, feats, run=None)
+    c_train.train_with_config(cfg, df, run=None)
+
     mock_metrics.assert_called_once()
 
 
 
+
 @patch("mlops_group35.cluster_train.generate_and_save_metrics")
-@patch("mlops_group35.cluster_train.load_csv_for_clustering")
-def test_train_returns_clusters(mock_loader, mock_metrics, tmp_path, monkeypatch):
+def test_train_returns_clusters(mock_metrics, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     # Fake dataset
-    ids = pd.Series([1, 2, 3, 4])
-    feats = pd.DataFrame({"a": [1, 2, 3, 4], "b": [2, 3, 4, 5]})
-    mock_loader.return_value = (ids, feats)
+    df = pd.DataFrame({
+        "scandir_id": [1, 2, 3, 4],
+        "a": [1, 2, 3, 4],
+        "b": [2, 3, 4, 5],
+    })
 
     cfg = TrainConfig(
         csv_path="dummy.csv",
-        id_col="id",
+        id_col="scandir_id",
         feature_cols=["a", "b"],
         n_clusters=2,
         seed=0,
@@ -77,7 +82,7 @@ def test_train_returns_clusters(mock_loader, mock_metrics, tmp_path, monkeypatch
         profile_path="reports/profile.prof",
     )
 
-    clusters = c_train.train_config(cfg, ids, feats, run=None)
+    clusters = c_train.train_with_config(cfg, df, run=None)
 
     # Assertions
     assert len(clusters) == 4

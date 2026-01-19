@@ -1,4 +1,3 @@
-
 """Clustering pipeline (Unsupervised Learning)
 
 This module handles:
@@ -28,6 +27,7 @@ from mlops_group35.data import load_preprocessed_data
 
 CONFIG_YAML_FILE = "reports/cluster_config.yaml"
 logger = logging.getLogger(__name__)
+
 
 def setup_logging_and_dirs(cfg: DictConfig) -> None:
     logging.basicConfig(
@@ -80,9 +80,7 @@ def generate_and_save_metrics(cfg, feats, kmeans, x_scaled, clusters, ids, run):
 
     # ---- Save outputs ----
     assignments_path = "reports/cluster_assignments.csv"
-    pd.DataFrame(
-        {cfg.id_col: ids.to_numpy(), "cluster": clusters}
-    ).to_csv(assignments_path, index=False)
+    pd.DataFrame({cfg.id_col: ids.to_numpy(), "cluster": clusters}).to_csv(assignments_path, index=False)
 
     logger.info("Saved cluster assignments to %s", assignments_path)
 
@@ -97,7 +95,6 @@ def generate_and_save_metrics(cfg, feats, kmeans, x_scaled, clusters, ids, run):
         run.summary.update(metrics)
 
     return metrics
-
 
 
 def train_with_config(cfg, df, run: None = None) -> dict[str, Any]:
@@ -130,13 +127,11 @@ def train(df, n_clusters, seed):
     return df_out, kmeans, X_scaled
 
 
-
 def _process_data(df):
-    #TODO apply one-hot-encode for gender
+    # TODO apply one-hot-encode for gender
     df2 = df.drop(
-        columns=["scandir_id", "site", "full2_iq", "qc_rest_3", "qc_rest_4",
-                 "qc_anatomical_2", "secondary_dx"],
-        errors="ignore"
+        columns=["scandir_id", "site", "full2_iq", "qc_rest_3", "qc_rest_4", "qc_anatomical_2", "secondary_dx"],
+        errors="ignore",
     )
 
     X = df2.select_dtypes(include="number")
@@ -146,27 +141,15 @@ def _process_data(df):
     X = X.replace(-999, np.nan)
 
     imputer = SimpleImputer(strategy="median")
-    X_imputed = pd.DataFrame(
-        imputer.fit_transform(X),
-        columns=X.columns,
-        index=X.index
-    )
+    X_imputed = pd.DataFrame(imputer.fit_transform(X), columns=X.columns, index=X.index)
 
     scaler = StandardScaler()
-    X_scaled = pd.DataFrame(
-        scaler.fit_transform(X_imputed),
-        columns=X.columns,
-        index=X.index
-    )
+    X_scaled = pd.DataFrame(scaler.fit_transform(X_imputed), columns=X.columns, index=X.index)
 
     return X_scaled
 
 
-
-def run_training_with_optional_profiling(
-    cfg: TrainConfig,
-    run: wandb.sdk.wandb_run.Run | None) -> None:
-
+def run_training_with_optional_profiling(cfg: TrainConfig, run: wandb.sdk.wandb_run.Run | None) -> None:
     # ---- Load data ----
     df = load_preprocessed_data(cfg.csv_path, cfg.feature_cols)
     logger.info(
@@ -174,7 +157,6 @@ def run_training_with_optional_profiling(
         len(df),
         df.shape[1],
     )
-
 
     if not cfg.profile:
         train_with_config(cfg, df, run=run)
@@ -190,7 +172,6 @@ def run_training_with_optional_profiling(
 
     stats = pstats.Stats(cfg.profile_path)
     stats.sort_stats("cumtime").print_stats(25)
-
 
 
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="cluster")

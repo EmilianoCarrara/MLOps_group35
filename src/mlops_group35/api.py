@@ -24,10 +24,9 @@ class PredictionInput(BaseModel):
 app = FastAPI()
 
 
-
 @app.get("/")
 def root():
-    """ Health check."""
+    """Health check."""
     response = {
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,
@@ -52,22 +51,16 @@ def predict(data: PredictionInput):
     csv_path = "data/processed/combined.csv"
     df = load_preprocessed_data(csv_path, required_feats)
 
-
     # Convert input to DataFrame
     new_row = pd.DataFrame([data.model_dump()])
     new_row = new_row[required_feats]
 
-
     # Append to dataset
     df_with_new = pd.concat([df, new_row], ignore_index=True)
 
-    df_out, kmeans, X_scaled = cluster_train.train(
-        df_with_new,
-        train_cfg.n_clusters,
-        train_cfg.seed
-    )
+    df_out, kmeans, X_scaled = cluster_train.train(df_with_new, train_cfg.n_clusters, train_cfg.seed)
 
     # Get user's cluster
     user_cluster = df_out.iloc[-1]["cluster"]
-    #TODO ATM it returns the cluster number, but it should return some interpretations
+    # TODO ATM it returns the cluster number, but it should return some interpretations
     return {"Group": int(user_cluster)}

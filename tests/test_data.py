@@ -9,6 +9,7 @@ CSV_PATH = os.path.join(_PATH_DATA, "processed", "combined.csv")
 DF = pd.read_csv(CSV_PATH)
 # use df = DF.copy(deep=True) if you are going to modify the data in any ways
 
+
 def test_dataset():
     """Test the MyDataset class."""
     df = DF
@@ -22,19 +23,37 @@ def test_dataset():
 
 
 REQUIRED_COLUMNS = {
-    'scandir_id', 'site', 'gender', 'age', 'handedness', 'dx',
-    'secondary_dx', 'adhd_measure', 'adhd_index', 'inattentive',
-    'hyper_impulsive', 'iq_measure', 'verbal_iq', 'performance_iq',
-    'full2_iq', 'full4_iq', 'med_status', 'qc_rest_1', 'qc_rest_2',
-    'qc_rest_3', 'qc_rest_4', 'qc_anatomical_1', 'qc_anatomical_2'
+    "scandir_id",
+    "site",
+    "gender",
+    "age",
+    "handedness",
+    "dx",
+    "secondary_dx",
+    "adhd_measure",
+    "adhd_index",
+    "inattentive",
+    "hyper_impulsive",
+    "iq_measure",
+    "verbal_iq",
+    "performance_iq",
+    "full2_iq",
+    "full4_iq",
+    "med_status",
+    "qc_rest_1",
+    "qc_rest_2",
+    "qc_rest_3",
+    "qc_rest_4",
+    "qc_anatomical_1",
+    "qc_anatomical_2",
 }
+
 
 def test_required_columns():
     df = DF
     print(df.columns)
     missing = REQUIRED_COLUMNS - set(df.columns)
     assert not missing, f"Missing columns: {missing}"
-
 
 
 def test_no_all_missing_columns():

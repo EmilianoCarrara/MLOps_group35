@@ -3,9 +3,8 @@ import pandas as pd
 from torch.utils.data import Dataset
 
 pd.set_option("display.max_columns", None)
-pd.set_option('display.max_rows', None)
-pd.set_option('display.width', 2000)
-
+pd.set_option("display.max_rows", None)
+pd.set_option("display.width", 2000)
 
 
 class MyDataset(Dataset):
@@ -51,13 +50,11 @@ class MyDataset(Dataset):
         )
 
 
-
 def preprocess(data_path: Path, output_folder: Path) -> None:
     print("Preprocessing data...")
     dataset = MyDataset(data_path)
     dataset.preprocess(output_folder)
     print(dataset.data.head(10))
-
 
 
 def load_preprocessed_data(csv_path: str, required_columns):
@@ -73,12 +70,7 @@ def load_preprocessed_data(csv_path: str, required_columns):
     return df[required]
 
 
-
-
-
-
-
 if __name__ == "__main__":
     print("Preprocessing data main...")
-    #typer.run(preprocess)
+    # typer.run(preprocess)
     preprocess(Path("data/raw"), Path("data/processed"))

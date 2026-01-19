@@ -1,5 +1,3 @@
-
-
 from unittest.mock import patch
 
 import pandas as pd
@@ -10,16 +8,18 @@ from mlops_group35.config import TrainConfig
 
 
 def test_build_train_config_filters_wandb_keys():
-    cfg = OmegaConf.create({
-        "csv_path": "data.csv",
-        "id_col": "id",
-        "feature_cols": ["a", "b"],
-        "n_clusters": 3,
-        "seed": 42,
-        "metrics_path": "reports/metrics.json",
-        "use_wandb": True,
-        "wandb_project": "test",
-    })
+    cfg = OmegaConf.create(
+        {
+            "csv_path": "data.csv",
+            "id_col": "id",
+            "feature_cols": ["a", "b"],
+            "n_clusters": 3,
+            "seed": 42,
+            "metrics_path": "reports/metrics.json",
+            "use_wandb": True,
+            "wandb_project": "test",
+        }
+    )
 
     train_cfg = c_train.build_train_config(cfg)
 
@@ -33,11 +33,13 @@ def test_train_calls_metrics_function(mock_metrics, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     # Create fake dataset
-    df = pd.DataFrame({
-        "scandir_id": [1, 2, 3],
-        "a": [1, 2, 3],
-        "b": [2, 3, 4],
-    })
+    df = pd.DataFrame(
+        {
+            "scandir_id": [1, 2, 3],
+            "a": [1, 2, 3],
+            "b": [2, 3, 4],
+        }
+    )
 
     cfg = TrainConfig(
         csv_path="data.csv",
@@ -55,18 +57,18 @@ def test_train_calls_metrics_function(mock_metrics, tmp_path, monkeypatch):
     mock_metrics.assert_called_once()
 
 
-
-
 @patch("mlops_group35.cluster_train.generate_and_save_metrics")
 def test_train_returns_clusters(mock_metrics, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     # Fake dataset
-    df = pd.DataFrame({
-        "scandir_id": [1, 2, 3, 4],
-        "a": [1, 2, 3, 4],
-        "b": [2, 3, 4, 5],
-    })
+    df = pd.DataFrame(
+        {
+            "scandir_id": [1, 2, 3, 4],
+            "a": [1, 2, 3, 4],
+            "b": [2, 3, 4, 5],
+        }
+    )
 
     cfg = TrainConfig(
         csv_path="dummy.csv",

@@ -2,7 +2,14 @@ FROM ghcr.io/astral-sh/uv:python3.11-bookworm AS base
 
 WORKDIR /app
 
-COPY pyproject.toml uv.lock README.md LICENSE ./
+# Disable Weights & Biases in Docker only
+ENV WANDB_MODE=disabled
+
+COPY pyproject.toml uv.lock ./
+
+# Remove README.md and LICENSE from myproject.toml
+RUN sed -i '/^readme *= *"README.md"/d' pyproject.toml && \
+    sed -i '/^license *= *{ *file *= *"LICENSE" *}/d' pyproject.toml
 
 RUN mkdir -p configs
 COPY configs/cluster.yaml ./configs/cluster.yaml

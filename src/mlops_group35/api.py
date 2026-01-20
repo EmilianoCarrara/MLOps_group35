@@ -69,7 +69,6 @@ def read_item(item_id: int):
 #     return {"Group": int(user_cluster)}
 
 
-
 @app.post("/predict")
 def predict(data: PredictionInput, n_clusters: int):
     required_feats = data.model_fields.keys()
@@ -98,21 +97,13 @@ def predict(data: PredictionInput, n_clusters: int):
     user_cluster = int(df_out.iloc[-1]["cluster"])
 
     # Compute cluster profiles (means)
-    cluster_profiles = (
-        df_out.groupby("cluster")[list(required_feats)]
-        .mean()
-        .round(2)
-        .to_dict(orient="index")
-    )
+    cluster_profiles = df_out.groupby("cluster")[list(required_feats)].mean().round(2).to_dict(orient="index")
 
     user_values = new_row.iloc[0].to_dict()
     cluster_mean = cluster_profiles[user_cluster]
 
     # Compare user to cluster mean
-    differences = {
-        feat: round(user_values[feat] - cluster_mean[feat], 2)
-        for feat in required_feats
-    }
+    differences = {feat: round(user_values[feat] - cluster_mean[feat], 2) for feat in required_feats}
 
     # Simple interpretation logic
     interpretation = []

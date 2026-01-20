@@ -14,13 +14,7 @@ st.markdown("Enter the user information and choose the number of clusters to gen
 # Cluster selection
 # -------------------------
 st.subheader("Clustering Configuration")
-n_clusters = st.number_input(
-    "Number of Clusters",
-    min_value=2,
-    max_value=10,
-    value=4,
-    step=1
-)
+n_clusters = st.number_input("Number of Clusters", min_value=2, max_value=10, value=4, step=1)
 
 # -------------------------
 # Input Features
@@ -29,19 +23,9 @@ st.subheader("Input Features")
 
 age = st.number_input("Age", min_value=5, max_value=80, value=12)
 
-gender = st.selectbox(
-    "Gender",
-    options=[0, 1],
-    format_func=lambda x: "Female" if x == 0 else "Male",
-    index=0
-)
+gender = st.selectbox("Gender", options=[0, 1], format_func=lambda x: "Female" if x == 0 else "Male", index=0)
 
-handedness = st.selectbox(
-    "Handedness",
-    options=[0, 1],
-    format_func=lambda x: "Left" if x == 0 else "Right",
-    index=1
-)
+handedness = st.selectbox("Handedness", options=[0, 1], format_func=lambda x: "Left" if x == 0 else "Right", index=1)
 
 verbal_iq = st.number_input("Verbal IQ", min_value=50, max_value=150, value=100)
 performance_iq = st.number_input("Performance IQ", min_value=50, max_value=150, value=100)
@@ -72,12 +56,7 @@ payload = {
 if st.button("🔍 Classify", use_container_width=True):
     try:
         with st.spinner("Running clustering model..."):
-            r = requests.post(
-                f"{URL}/predict",
-                params={"n_clusters": n_clusters},
-                json=payload,
-                timeout=60
-            )
+            r = requests.post(f"{URL}/predict", params={"n_clusters": n_clusters}, json=payload, timeout=60)
 
         r.raise_for_status()
         result = r.json()

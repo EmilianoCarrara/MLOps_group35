@@ -7,6 +7,10 @@ Test:
 uv run pytest
 uv run pytest -s
 
+API test:
+uv run pytest tests/integrationtests/test_apis.py
+
+
 uv add --dev coverage
 uv run coverage run -m pytest tests
 uv run coverage report -m

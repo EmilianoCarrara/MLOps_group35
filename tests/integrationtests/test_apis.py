@@ -1,12 +1,14 @@
-from fastapi.testclient import TestClient
+# from mlops_group35.api import app
+# client = TestClient(app)
+import requests
 
-from mlops_group35.api import app
-
-client = TestClient(app)
+# BASE_URL = "http://136.113.102.90:8000"
+BASE_URL = "http://localhost:8000"
 
 
 def test_read_root():
-    response = client.get("/")
+    # response = client.get("/")
+    response = requests.get(f"{BASE_URL}/")
     assert response.status_code == 200
     print(response.json())
     assert response.json() == {"message": "OK", "status-code": 200}
@@ -25,10 +27,17 @@ def test_predict_endpoint_frontend_style():
         "hyper_impulsive": 50,
     }
 
-    response = client.post(
-        "/predict",
+    # response = client.post(
+    #     "/predict",
+    #     params={"n_clusters": 4},
+    #     json=payload,
+    # )
+
+    response = requests.post(
+        f"{BASE_URL}/predict",
         params={"n_clusters": 4},
         json=payload,
+        timeout=60,
     )
 
     assert response.status_code == 200

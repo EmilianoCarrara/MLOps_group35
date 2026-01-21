@@ -1,16 +1,15 @@
-
 from fastapi.testclient import TestClient
 
 from mlops_group35.api import app
 
 client = TestClient(app)
 
+
 def test_read_root():
     response = client.get("/")
     assert response.status_code == 200
     print(response.json())
-    assert response.json() == {'message': 'OK', 'status-code': 200}
-
+    assert response.json() == {"message": "OK", "status-code": 200}
 
 
 def test_predict_endpoint_frontend_style():

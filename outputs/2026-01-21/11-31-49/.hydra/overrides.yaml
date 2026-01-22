@@ -1,0 +1,4 @@
+- n_clusters=14
+- use_wandb=true
+- wandb_mode=online
+- wandb_run_name=k14

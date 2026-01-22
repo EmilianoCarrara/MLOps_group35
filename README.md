@@ -78,3 +78,13 @@ The directory structure of the project looks like this:
 Created using [mlops_template](https://github.com/SkafteNicki/mlops_template),
 a [cookiecutter template](https://github.com/cookiecutter/cookiecutter) for getting
 started with Machine Learning Operations (MLOps).
+
+
+## Drift robustness check (M27)
+
+Run:
+uv run python -m mlops_group35.drift_check
+
+Outputs:
+- reports/drift_psi_table.csv (PSI per feature)
+- reports/drift_report.json (drift_detected flag + top features)

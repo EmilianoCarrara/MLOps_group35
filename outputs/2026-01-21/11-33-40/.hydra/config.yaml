@@ -1,0 +1,21 @@
+seed: 42
+csv_path: data/processed/combined.csv
+metrics_path: reports/metrics.json
+profile: false
+profile_path: reports/profile.pstats
+id_col: scandir_id
+feature_cols:
+- age
+- gender
+- handedness
+- verbal_iq
+- performance_iq
+- full4_iq
+- adhd_index
+- inattentive
+- hyper_impulsive
+n_clusters: 15
+use_wandb: true
+wandb_project: mlops_group35
+wandb_mode: online
+wandb_run_name: k15
